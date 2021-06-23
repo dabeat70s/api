@@ -65,6 +65,11 @@ namespace CourseLibrary.API.Services
                         .OrderBy(c => c.Title).ToList();
         }
 
+        public IEnumerable<Course> GetCourses()
+        {
+            return _context.Courses.ToList();
+        }
+
         public void UpdateCourse(Course course)
         {
             // no code in this implementation

@@ -181,6 +181,36 @@ namespace CourseLibraryAPI.Controllers
             return NoContent();
         }
 
+        [HttpDelete("{courseId}")]
+        public ActionResult DeleteCourseForAuthor(Guid authorId, Guid courseId)
+        {
+            if (!_courseLibraryRepository.AuthorExists(authorId))
+            {
+                return NotFound();
+            }
+
+            var courseForAuthorFromRepo = _courseLibraryRepository.GetCourse(authorId, courseId);
+
+            if (courseForAuthorFromRepo == null)
+            {
+                return NotFound();
+            }
+
+            _courseLibraryRepository.DeleteCourse(courseForAuthorFromRepo);
+            _courseLibraryRepository.Save();
+
+            return NoContent();
+        }
+        [HttpGet]
+        [Route("/api/all/courses")]
+        public ActionResult<IEnumerable<CourseDto>> GetAllCourses()
+        {
+            var courses = _courseLibraryRepository.GetCourses();
+            return _mapper.Map<List<CourseDto>>(courses);
+        }
+
+
+
 
         public override ActionResult ValidationProblem(
             [ActionResultObjectValue] ModelStateDictionary modelStateDictionary)
