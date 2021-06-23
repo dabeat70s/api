@@ -35,23 +35,9 @@ namespace CourseLibraryAPI.Controllers
         public ActionResult<IEnumerable<AuthorDto>> GetAuthors(
             [FromQuery] AuthorsResourceParameters authorsResourceParameters)
         {                      
-            var authorsFromRepo = _courseLibraryRepository.GetAuthors(authorsResourceParameters);
+            var authorsFromRepo = _courseLibraryRepository.GetAuthors(authorsResourceParameters);    
            
-
-            //var authors = new List<AuthorDto>();
-
-            //foreach (var author in authorsFromRepo)
-            //{
-            //    authors.Add(new AuthorDto()
-            //    {
-            //        Id = author.Id,
-            //        Name = $"{author.FirstName} {author.LastName}",
-            //        MainCategory = author.MainCategory,
-            //        Age = author.DateOfBirth.GetCurrentAge()
-            //    });
-            //}
-
-            return Ok(_mapper.Map<IEnumerable<AuthorDto>>(authorsFromRepo)); //new JsonResult(authors);
+            return Ok(_mapper.Map<IEnumerable<AuthorDto>>(authorsFromRepo)); 
         }
 
         [HttpGet("{authorId:guid}",Name ="GetAuthor")]

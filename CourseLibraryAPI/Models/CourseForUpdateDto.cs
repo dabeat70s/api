@@ -11,9 +11,6 @@ namespace CourseLibrary.API.Models
     {
         [Required(ErrorMessage = "You should fill out a description.")]
         public override string Description { get => base.Description; set => base.Description = value; }
-
-
-        //public string  Title { get; set; }
-        //public string Description { get; set; }
+      
     }
 }

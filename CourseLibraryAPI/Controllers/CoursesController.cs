@@ -94,8 +94,7 @@ namespace CourseLibraryAPI.Controllers
             var courseForAuthorFromRepo = _courseLibraryRepository.GetCourse(authorId, courseId);
 
             if (courseForAuthorFromRepo == null)
-            {
-                //return NotFound(); // this is PUT without upsert... 
+            {               
 
                 var courseToAdd = _mapper.Map<Course>(course);
                 courseToAdd.Id = courseId;
@@ -136,10 +135,7 @@ namespace CourseLibraryAPI.Controllers
             var courseForAuthorFromRepo = _courseLibraryRepository.GetCourse(authorId, courseId);
 
             if (courseForAuthorFromRepo == null)
-            {
-                //return NotFound(); // for not creating yet
-
-                //this will creat if not exist
+            {               
                 var courseDto = new CourseForUpdateDto();
                 patchDocument.ApplyTo(courseDto, ModelState);
 
@@ -162,11 +158,9 @@ namespace CourseLibraryAPI.Controllers
             }
 
             var courseToPatch = _mapper.Map<CourseForUpdateDto>(courseForAuthorFromRepo);
-            // add validation
-            //patchDocument.ApplyTo(courseToPatch)
+            // add validation            
             patchDocument.ApplyTo(courseToPatch, ModelState);
-
-            //to ensure valadation rules of entities as will change description to null again..
+            
             if (!TryValidateModel(courseToPatch))
             {
                 return ValidationProblem(ModelState);

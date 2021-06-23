@@ -9,23 +9,8 @@ namespace CourseLibrary.API.Models
 {
     [CourseTitleMustBeDifferentFromDescriptionAttribute 
         (ErrorMessage ="Title & Descr must be different")]
-    public class CourseForCreationDto : CourseForManipulationDto //:IValidatableObject // only fires if all other validations succeed
+    public class CourseForCreationDto : CourseForManipulationDto //:IValidatableObject
     {
-        //[Required(ErrorMessage ="Title Required")]
-        //[MaxLength(100,ErrorMessage ="100 Char only")]
-        //public string Title { get; set; }
-
-        //[MaxLength(500, ErrorMessage = "500 Char only")]
-        //public string Description { get; set; }
-
-        //public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-        //{
-        //    if (Title == Description)
-        //    {
-        //        yield return new ValidationResult(
-        //            "The provided description should be different from the title",
-        //            new[] { "CourseForCreationDto" });
-        //    }
-        //}
+       
     }
 }
