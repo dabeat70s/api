@@ -20,14 +20,18 @@ namespace CourseLibraryAPI.Controllers
     {
         private readonly ICourseLibraryRepository _courseLibraryRepository;
         private readonly IMapper _mapper;
+        private readonly IPropertyMappingService _propertyMappingService;
 
         public AuthorsController(
-            ICourseLibraryRepository courseLibraryRepository, IMapper mapper)
+            ICourseLibraryRepository courseLibraryRepository, IMapper mapper,
+            IPropertyMappingService propertyMappingService)
         {
             _courseLibraryRepository = courseLibraryRepository ??
                 throw new ArgumentNullException(nameof(courseLibraryRepository));
             _mapper = mapper ??
                 throw new ArgumentNullException(nameof(mapper));
+            _propertyMappingService = propertyMappingService ??
+                throw new ArgumentNullException(nameof(propertyMappingService));
         }
 
 
@@ -36,6 +40,12 @@ namespace CourseLibraryAPI.Controllers
         public ActionResult<IEnumerable<AuthorDto>> GetAuthors(
             [FromQuery] AuthorsResourceParameters authorsResourceParameters)
         {
+            if (!_propertyMappingService.ValidMappingExistsFor<AuthorDto,Author>
+                (authorsResourceParameters.OrderBy))
+            {
+                return BadRequest();
+            }
+
             var authorsFromRepo = _courseLibraryRepository.GetAuthors(authorsResourceParameters);
 
             //addin for Meta and links Hateoas
@@ -147,8 +157,8 @@ namespace CourseLibraryAPI.Controllers
         }
 
         private string CreateAuthorsResourceUri(
-                            AuthorsResourceParameters authorsResourceParameters,
-   ResourceUriType type)
+            AuthorsResourceParameters authorsResourceParameters,
+            ResourceUriType type)
         {
             switch (type)
             {
@@ -156,6 +166,7 @@ namespace CourseLibraryAPI.Controllers
                     return Url.Link("GetAuthors",
                       new
                       {
+                          orderBy = authorsResourceParameters.OrderBy,
                           pageNumber = authorsResourceParameters.PageNumber - 1,
                           pageSize = authorsResourceParameters.PageSize,
                           mainCategory = authorsResourceParameters.MainCategory,
@@ -165,6 +176,7 @@ namespace CourseLibraryAPI.Controllers
                     return Url.Link("GetAuthors",
                       new
                       {
+                          orderBy = authorsResourceParameters.OrderBy,
                           pageNumber = authorsResourceParameters.PageNumber + 1,
                           pageSize = authorsResourceParameters.PageSize,
                           mainCategory = authorsResourceParameters.MainCategory,
@@ -175,6 +187,7 @@ namespace CourseLibraryAPI.Controllers
                     return Url.Link("GetAuthors",
                     new
                     {
+                        orderBy = authorsResourceParameters.OrderBy,
                         pageNumber = authorsResourceParameters.PageNumber,
                         pageSize = authorsResourceParameters.PageSize,
                         mainCategory = authorsResourceParameters.MainCategory,
