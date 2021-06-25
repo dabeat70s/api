@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
+using CourseLibrary.API.ActionConstraints;
 using CourseLibrary.API.Entities;
 using CourseLibrary.API.Helpers;
 using CourseLibrary.API.Models;
 using CourseLibrary.API.Services;
 using CourseLibraryAPI.ResourceParameters;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,7 +27,7 @@ namespace CourseLibraryAPI.Controllers
 
         public AuthorsController(
             ICourseLibraryRepository courseLibraryRepository, IMapper mapper,
-            IPropertyMappingService propertyMappingService,IPropertyCheckerService propertyCheckerService)
+            IPropertyMappingService propertyMappingService, IPropertyCheckerService propertyCheckerService)
         {
             _courseLibraryRepository = courseLibraryRepository ??
                 throw new ArgumentNullException(nameof(courseLibraryRepository));
@@ -43,7 +45,7 @@ namespace CourseLibraryAPI.Controllers
         public IActionResult GetAuthors(
             [FromQuery] AuthorsResourceParameters authorsResourceParameters)
         {
-            if (!_propertyMappingService.ValidMappingExistsFor<AuthorDto,Author>
+            if (!_propertyMappingService.ValidMappingExistsFor<AuthorDto, Author>
                 (authorsResourceParameters.OrderBy))
             {
                 return BadRequest();
@@ -105,9 +107,23 @@ namespace CourseLibraryAPI.Controllers
             return Ok(linkedCollectionResource);
         }
 
+
+        [Produces("application/json",
+           "application/vnd.lej.hateoas+json",
+           "application/vnd.lej.author.full+json",
+           "application/vnd.lej.author.full.hateoas+json",
+           "application/vnd.lej.author.friendly+json",
+           "application/vnd.lej.author.friendly.hateoas+json")]
         [HttpGet("{authorId:guid}", Name = "GetAuthor")]
-        public IActionResult GetAuthor(Guid authorId, string fields)
+        public IActionResult GetAuthor(Guid authorId, string fields,
+             [FromHeader(Name = "Accept")] string mediaType)
         {
+            if (!MediaTypeHeaderValue.TryParse(mediaType,
+                out MediaTypeHeaderValue parsedMediaType))
+            {
+                return BadRequest();
+            }
+
             if (!_propertyCheckerService.TypeHasProperties<AuthorDto>
               (fields))
             {
@@ -121,19 +137,93 @@ namespace CourseLibraryAPI.Controllers
                 return NotFound();
             }
 
+            var includeLinks = parsedMediaType.SubTypeWithoutSuffix
+          .EndsWith("hateoas", StringComparison.InvariantCultureIgnoreCase);
+
+            IEnumerable<LinkDto> links = new List<LinkDto>();
+
+            if (includeLinks)
+            {
+                links = CreateLinksForAuthor(authorId, fields);
+            }
+
+            var primaryMediaType = includeLinks ?
+                parsedMediaType.SubTypeWithoutSuffix
+                .Substring(0, parsedMediaType.SubTypeWithoutSuffix.Length - 8)
+                : parsedMediaType.SubTypeWithoutSuffix;
+
+            // full author
+            if (primaryMediaType == "vnd.lej.author.full")
+            {
+                var fullResourceToReturn = _mapper.Map<AuthorFullDto>(authorFromRepo)
+                    .ShapeData(fields) as IDictionary<string, object>;
+
+                if (includeLinks)
+                {
+                    fullResourceToReturn.Add("links", links);
+                }
+
+                return Ok(fullResourceToReturn);
+            }
+
+            // friendly author
+            var friendlyResourceToReturn = _mapper.Map<AuthorDto>(authorFromRepo)
+                .ShapeData(fields) as IDictionary<string, object>;
+
+            if (includeLinks)
+            {
+                friendlyResourceToReturn.Add("links", links);
+            }
+
+            return Ok(friendlyResourceToReturn);
+
+            //step one of vendor specifics
+            //if (parsedMediaType.MediaType == "application/vnd.lej.hateoas+json")
+            //{
+            //    var links = CreateLinksForAuthor(authorId, fields);
+
+            //    var linkedResourceToReturn =
+            //        _mapper.Map<AuthorDto>(authorFromRepo).ShapeData(fields)
+            //        as IDictionary<string, object>;
+
+            //    linkedResourceToReturn.Add("links", links);
+
+            //    return Ok(linkedResourceToReturn); 
+            //}
             //return Ok(_mapper.Map<AuthorDto>(authorFromRepo).ShapeData(fields));
-            var links = CreateLinksForAuthor(authorId, fields);
-
-            var linkedResourceToReturn =
-                _mapper.Map<AuthorDto>(authorFromRepo).ShapeData(fields)
-                as IDictionary<string, object>;
-
-            linkedResourceToReturn.Add("links", links);
-
-            return Ok(linkedResourceToReturn);
         }
 
+
+        [HttpPost(Name = "CreateAuthorWithDateOfDeath")]
+        [RequestHeaderMatchesMediaType("Content-Type",
+           "application/vnd.lej.authorforcreationwithdateofdeath+json")]
+        [Consumes("application/vnd.lej.authorforcreationwithdateofdeath+json")]
+        public IActionResult CreateAuthorWithDateOfDeath(AuthorForCreationWithDateOfDeathDto author)
+        {
+            var authorEntity = _mapper.Map<Author>(author);
+            _courseLibraryRepository.AddAuthor(authorEntity);
+            _courseLibraryRepository.Save();
+
+            var authorToReturn = _mapper.Map<AuthorDto>(authorEntity);
+
+            var links = CreateLinksForAuthor(authorToReturn.Id, null);
+
+            var linkedResourceToReturn = authorToReturn.ShapeData(null)
+                as IDictionary<string, object>;
+            linkedResourceToReturn.Add("links", links);
+
+            return CreatedAtRoute("GetAuthor",
+                new { authorId = linkedResourceToReturn["Id"] },
+                linkedResourceToReturn);
+        }
+
+
         [HttpPost(Name = "CreateAuthor")]
+        [RequestHeaderMatchesMediaType("Content-Type",
+            "application/json",
+            "application/vnd.lej.authorforcreation+json")]
+        [Consumes("application/json",
+            "application/vnd.lej.authorforcreation+json")]
         public ActionResult<AuthorDto> CreateAuthor(AuthorForCreationDto author)
         {
             var authorEntity = _mapper.Map<Author>(author);
@@ -157,6 +247,30 @@ namespace CourseLibraryAPI.Controllers
             //    authorToReturn);
         }
 
+        //[HttpPost(Name = "CreateAuthorWithDateOfDeath")]
+        //[RequestHeaderMatchesMediaType("Content-Type",
+        //   "application/vnd.lej.authorforcreationwithdateofdeath+json")]
+        //[Consumes("application/vnd.lej.authorforcreationwithdateofdeath+json")]
+        //public IActionResult CreateAuthorWithDateOfDeath(AuthorForCreationWithDateOfDeathDto author)
+        //{
+        //    var authorEntity = _mapper.Map<Author>(author);
+        //    _courseLibraryRepository.AddAuthor(authorEntity);
+        //    _courseLibraryRepository.Save();
+
+        //    var authorToReturn = _mapper.Map<AuthorDto>(authorEntity);
+
+        //    var links = CreateLinksForAuthor(authorToReturn.Id, null);
+
+        //    var linkedResourceToReturn = authorToReturn.ShapeData(null)
+        //        as IDictionary<string, object>;
+        //    linkedResourceToReturn.Add("links", links);
+
+        //    return CreatedAtRoute("GetAuthor",
+        //        new { authorId = linkedResourceToReturn["Id"] },
+        //        linkedResourceToReturn);
+        //}
+
+
 
         [HttpOptions]
         public IActionResult GetAuthorsOptions()
@@ -165,7 +279,7 @@ namespace CourseLibraryAPI.Controllers
             return Ok();
         }
 
-        [HttpDelete("{authorId}", Name ="DeleteAuthor")]
+        [HttpDelete("{authorId}", Name = "DeleteAuthor")]
         public ActionResult DeleteAuthor(Guid authorId)
         {
             var authorFromRepo = _courseLibraryRepository.GetAuthor(authorId);
