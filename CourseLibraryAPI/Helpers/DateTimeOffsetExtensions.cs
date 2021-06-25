@@ -28,9 +28,14 @@ namespace CourseLibrary.API.Helpers
         }
 
         public static int GetReBornAge(this DateTimeOffset? dateReborn  , 
-            DateTimeOffset dateTimeOffset, DateTimeOffset? dateOfDeath)
+            DateTimeOffset dateOfBirth, DateTimeOffset? dateOfDeath)
         {
             if (dateReborn == null)
+            {
+                return 0;
+            }
+
+            if (dateReborn < dateOfBirth)
             {
                 return 0;
             }
@@ -44,11 +49,11 @@ namespace CourseLibrary.API.Helpers
 
             if (dateReborn != null)
             {
-                dateTimeOffset = (DateTimeOffset)dateReborn;
-                rebornAge = dateToCalculateTo.Year - dateTimeOffset.Year;
+                dateOfBirth = (DateTimeOffset)dateReborn;
+                rebornAge = dateToCalculateTo.Year - dateOfBirth.Year;
             }
 
-            if (dateToCalculateTo < dateTimeOffset.AddYears(rebornAge))
+            if (dateToCalculateTo < dateOfBirth.AddYears(rebornAge))
             {
                 rebornAge--;
             }
@@ -56,33 +61,6 @@ namespace CourseLibrary.API.Helpers
             return rebornAge;          
         }
 
-        //public static int GetReBornAge(this DateTimeOffset dateTimeOffset,
-        //   DateTimeOffset? dateReborn, DateTimeOffset? dateOfDeath)
-        //{
-        //    if (dateReborn == null)
-        //    {
-        //        return 0;
-        //    }
-        //    var dateToCalculateTo = DateTime.UtcNow;
-
-        //    if (dateOfDeath != null)
-        //    {
-        //        dateToCalculateTo = dateOfDeath.Value.UtcDateTime;
-        //    }
-        //    var rebornAge = 1;
-
-        //    if (dateReborn != null)
-        //    {
-        //        dateTimeOffset = (DateTimeOffset)dateReborn;
-        //        rebornAge = dateToCalculateTo.Year - dateTimeOffset.Year;
-        //    }
-
-        //    if (dateToCalculateTo < dateTimeOffset.AddYears(rebornAge))
-        //    {
-        //        rebornAge--;
-        //    }
-
-        //    return rebornAge;
-        //}
+      
     }
 }

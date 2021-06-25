@@ -23,4 +23,21 @@ namespace CourseLibrary.API.ValidationAttributes
             return ValidationResult.Success;
         }
     }
+
+    public class AuthorDOBMustComeBeforeDOD : ValidationAttribute
+    {
+        protected override ValidationResult IsValid(object value,
+            ValidationContext validationContext)
+        {
+            var author = (AuthorForCreationWithDateOfDeathDto)validationContext.ObjectInstance;
+
+            if (author.DateOfBirth > author.DateOfDeath)
+            {
+                return new ValidationResult(ErrorMessage,
+                    new[] { nameof(AuthorForCreationWithDateOfDeathDto) });
+            }
+
+            return ValidationResult.Success;
+        }
+    }
 }
