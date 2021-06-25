@@ -175,22 +175,7 @@ namespace CourseLibraryAPI.Controllers
                 friendlyResourceToReturn.Add("links", links);
             }
 
-            return Ok(friendlyResourceToReturn);
-
-            //step one of vendor specifics
-            //if (parsedMediaType.MediaType == "application/vnd.lej.hateoas+json")
-            //{
-            //    var links = CreateLinksForAuthor(authorId, fields);
-
-            //    var linkedResourceToReturn =
-            //        _mapper.Map<AuthorDto>(authorFromRepo).ShapeData(fields)
-            //        as IDictionary<string, object>;
-
-            //    linkedResourceToReturn.Add("links", links);
-
-            //    return Ok(linkedResourceToReturn); 
-            //}
-            //return Ok(_mapper.Map<AuthorDto>(authorFromRepo).ShapeData(fields));
+            return Ok(friendlyResourceToReturn);          
         }
 
 
@@ -241,36 +226,8 @@ namespace CourseLibraryAPI.Controllers
             return CreatedAtRoute("GetAuthor",
                 new { authorId = linkedResourceToReturn["Id"] },
                 linkedResourceToReturn);
-
-            //return CreatedAtRoute("GetAuthor",
-            //    new { authorId = authorToReturn.Id },
-            //    authorToReturn);
-        }
-
-        //[HttpPost(Name = "CreateAuthorWithDateOfDeath")]
-        //[RequestHeaderMatchesMediaType("Content-Type",
-        //   "application/vnd.lej.authorforcreationwithdateofdeath+json")]
-        //[Consumes("application/vnd.lej.authorforcreationwithdateofdeath+json")]
-        //public IActionResult CreateAuthorWithDateOfDeath(AuthorForCreationWithDateOfDeathDto author)
-        //{
-        //    var authorEntity = _mapper.Map<Author>(author);
-        //    _courseLibraryRepository.AddAuthor(authorEntity);
-        //    _courseLibraryRepository.Save();
-
-        //    var authorToReturn = _mapper.Map<AuthorDto>(authorEntity);
-
-        //    var links = CreateLinksForAuthor(authorToReturn.Id, null);
-
-        //    var linkedResourceToReturn = authorToReturn.ShapeData(null)
-        //        as IDictionary<string, object>;
-        //    linkedResourceToReturn.Add("links", links);
-
-        //    return CreatedAtRoute("GetAuthor",
-        //        new { authorId = linkedResourceToReturn["Id"] },
-        //        linkedResourceToReturn);
-        //}
-
-
+            
+        }   
 
         [HttpOptions]
         public IActionResult GetAuthorsOptions()
@@ -296,37 +253,6 @@ namespace CourseLibraryAPI.Controllers
             return NoContent();
         }
 
-
-
-
-
-
-
-
-        [HttpGet("{authorId}")]
-        public IActionResult GetAuthorMe(string authorId)
-        {
-
-
-            if (authorId == "CLINT")
-            {
-                return Ok("Your Name Must Be Clint Adams");
-            }
-
-            return NotFound();
-        }
-        [HttpGet("{authorId:int}")]
-        public IActionResult GetAuthornUM(int authorId)
-        {
-
-
-            if (authorId == 22)
-            {
-                return Ok("Your Name Must Be Clint Adams of age" + authorId);
-            }
-
-            return NotFound();
-        }
 
         private string CreateAuthorsResourceUri(
             AuthorsResourceParameters authorsResourceParameters,
