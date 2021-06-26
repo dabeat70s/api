@@ -19,8 +19,10 @@ namespace CourseLibraryAPI.Controllers
     [ApiController]
     [Route("api/authors/{authorId}/courses")]
     //[ResponseCache(CacheProfileName = "240SecondsCacheProfile")]
-    [HttpCacheExpiration(CacheLocation = CacheLocation.Public)]
-    [HttpCacheValidation(MustRevalidate = true)]
+
+    //alternative cache
+    //[HttpCacheExpiration(CacheLocation = CacheLocation.Public)]
+    //[HttpCacheValidation(MustRevalidate = true)]
     public class CoursesController : ControllerBase
     {
         private readonly ICourseLibraryRepository _courseLibraryRepository;
@@ -49,8 +51,8 @@ namespace CourseLibraryAPI.Controllers
 
         [HttpGet("{courseId}",Name ="GetCourseForAuthor")]
         //[ResponseCache(Duration = 120)]
-        [HttpCacheExpiration(CacheLocation = CacheLocation.Public, MaxAge = 1000)]
-        [HttpCacheValidation(MustRevalidate = false)]
+        //[HttpCacheExpiration(CacheLocation = CacheLocation.Public, MaxAge = 1000)]
+        //[HttpCacheValidation(MustRevalidate = false)]
         public ActionResult<CourseDto> GetCourseForAuthor(Guid authorId, Guid courseId)
         {
             if (!_courseLibraryRepository.AuthorExists(authorId))
